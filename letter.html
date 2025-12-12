@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ILOVEYOU VENUS - Letter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Quicksand', sans-serif; background-color: #fdf2f8; overflow-x: hidden; }
+        .font-handwriting { font-family: 'Dancing Script', cursive; }
+        .font-serif-display { font-family: 'Playfair Display', serif; }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) translateX(20px) rotate(360deg); opacity: 0; }
+        }
+        .heart-particle { position: fixed; top: -10%; pointer-events: none; animation-name: fall; animation-timing-function: linear; animation-iteration-count: infinite; }
+        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); }
+    </style>
+</head>
+<body class="bg-pink-50 text-gray-900 pb-24 md:pb-0">
+
+    <div id="hearts-container" class="fixed inset-0 pointer-events-none z-0"></div>
+    <div class="hidden md:block absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-rose-300 via-pink-500 to-rose-300"></div>
+
+    <main class="relative z-10 pt-8 md:pt-12 min-h-screen">
+        <div class="max-w-2xl mx-auto px-6 pb-20 pt-8 animate-[slideUp_0.5s_ease-out]">
+            <div class="glass-panel p-8 md:p-12 rounded-lg shadow-lg relative bg-white/60">
+                <div class="absolute top-6 left-6 text-rose-200">
+                    <i data-lucide="quote" width="48" height="48" class="rotate-180"></i>
+                </div>
+                
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl md:text-4xl font-handwriting text-rose-600 mb-2">My Dearest Venus,</h2>
+                    <div class="h-1 w-20 bg-rose-200 mx-auto rounded-full"></div>
+                </div>
+        
+                <div class="font-serif-display text-gray-700 leading-relaxed space-y-6 text-lg">
+                  <p>
+                    As I sit here to write this, I find myself overwhelmed by how lucky I am to have you in my life. Every day since December 13, 2024, has been a beautiful journey that I never want to end.
+                  </p>
+                  <p>
+                    You are the melody to my life's song, the color in my greyest days, and the warmth in my coldest nights. Your smile is my favorite sight, and your laughter is my favorite sound.
+                  </p>
+                  <p>
+                    This little app is just a small token of my immense love for you. I wanted to capture our memories, our time together, and the little things that make "us" so special.
+                  </p>
+                  <p>
+                    I promise to love you, cherish you, and stand by you, today and forever.
+                  </p>
+                  <p>
+                    Happy anniversary, my love. Thank you for choosing me, for staying, and for loving me the way you do. Here’s to many more days, months, and years by your side loving you a little more with each one. ❤️😘💋
+                  </p>
+                </div>
+        
+                <div class="mt-12 text-right">
+                  <p class="font-handwriting text-2xl text-rose-600">Forever Yours,</p>
+                  <p class="font-serif-display text-xl text-gray-800 mt-2">Your Love</p>
+                </div>
+        
+                <div class="absolute bottom-6 right-6 text-rose-200">
+                    <i data-lucide="quote" width="48" height="48"></i>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Navigation -->
+    <div class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 w-[95%] max-w-2xl">
+        <div class="glass-panel rounded-2xl shadow-2xl p-2 flex justify-around items-center border border-white/50">
+            <a href="home.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 text-gray-500 hover:bg-rose-100 hover:text-rose-500">
+                <i data-lucide="heart"></i>
+                <span class="text-xs md:text-sm font-medium mt-1">Home</span>
+            </a>
+            <a href="letter.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 bg-rose-500 text-white shadow-lg scale-105">
+                <i data-lucide="file-text" class="animate-bounce"></i>
+                <span class="text-xs md:text-sm font-medium mt-1">Letter</span>
+            </a>
+            <a href="music.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 text-gray-500 hover:bg-rose-100 hover:text-rose-500">
+                <i data-lucide="music"></i>
+                <span class="text-xs md:text-sm font-medium mt-1">Music</span>
+            </a>
+            <a href="photos.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 text-gray-500 hover:bg-rose-100 hover:text-rose-500">
+                <i data-lucide="image"></i>
+                <span class="text-xs md:text-sm font-medium mt-1">Photos</span>
+            </a>
+            <a href="garden.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 text-gray-500 hover:bg-rose-100 hover:text-rose-500">
+                <i data-lucide="flower-2"></i>
+                <span class="text-xs md:text-sm font-medium mt-1">Garden</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        if(localStorage.getItem('venus_auth') !== 'true') window.location.href = 'landingpage.html';
+        lucide.createIcons();
+
+        // Hearts
+        const heartsContainer = document.getElementById('hearts-container');
+        for(let i=0; i<30; i++) {
+            const heart = document.createElement('div');
+            heart.className = 'heart-particle absolute text-pink-300 opacity-60';
+            heart.innerText = '❤';
+            heart.style.left = Math.random() * 100 + '%';
+            heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+            heart.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            heart.style.animationDelay = (Math.random() * 5) + 's';
+            heartsContainer.appendChild(heart);
+        }
+    </script>
+
+    <!-- Background music resume script -->
+    <script>
+      // Resume background music across pages using saved state from music.html
+      (function() {
+        const raw = localStorage.getItem('venus_player_state');
+        if (!raw) return;
+
+        let state;
+        try {
+          state = JSON.parse(raw);
+        } catch (e) {
+          return;
+        }
+        if (!state || !state.src) return;
+
+        const bgAudio = new Audio();
+        bgAudio.preload = 'metadata';
+        bgAudio.src = state.src;
+        bgAudio.currentTime = state.currentTime || 0;
+
+        if (state.isPlaying) {
+          bgAudio.play().catch(() => {
+            // Autoplay may be blocked until user interacts
+          });
+        }
+
+        function save() {
+          const newState = {
+            src: state.src,
+            index: state.index,
+            currentTime: bgAudio.currentTime || 0,
+            isPlaying: !bgAudio.paused
+          };
+          localStorage.setItem('venus_player_state', JSON.stringify(newState));
+        }
+
+        bgAudio.addEventListener('timeupdate', save);
+        window.addEventListener('beforeunload', save);
+      })();
+    </script>
+</body>
+</html>

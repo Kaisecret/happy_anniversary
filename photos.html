@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ILOVEYOU VENUS - Gallery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Quicksand', sans-serif; background-color: #fdf2f8; overflow-x: hidden; }
+        .font-handwriting { font-family: 'Dancing Script', cursive; }
+        .font-serif-display { font-family: 'Playfair Display', serif; }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) translateX(20px) rotate(360deg); opacity: 0; }
+        }
+        .heart-particle { position: fixed; top: -10%; pointer-events: none; animation-name: fall; animation-timing-function: linear; animation-iteration-count: infinite; }
+        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); }
+    </style>
+</head>
+<body class="bg-pink-50 text-gray-900 pb-24 md:pb-0">
+
+    <div id="hearts-container" class="fixed inset-0 pointer-events-none z-0"></div>
+    <div class="hidden md:block absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-rose-300 via-pink-500 to-rose-300"></div>
+
+    <main class="relative z-10 pt-8 md:pt-12 min-h-screen">
+        <div class="container mx-auto px-4 pb-20 animate-[fadeIn_0.8s_ease]">
+            <h2 class="text-3xl font-serif-display text-center text-rose-800 mb-8 mt-4">Our Memories</h2>
+
+            <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Images injected here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal -->
+    <div id="lightbox" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 hidden opacity-0 transition-opacity duration-300">
+        <button id="close-lightbox" class="absolute top-4 right-4 text-white hover:text-rose-400 transition-colors bg-white/10 p-2 rounded-full backdrop-blur-sm z-50">
+            <i data-lucide="x" width="24"></i>
+        </button>
+
+        <div class="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center" id="lightbox-content">
+            <img id="lightbox-img" src="" alt="" class="max-h-[80vh] w-auto object-contain rounded-lg shadow-2xl" />
+            <div class="mt-4 bg-white/10 backdrop-blur-md text-white px-6 py-3 rounded-full text-center">
+              <p id="lightbox-caption" class="font-serif-display text-lg tracking-wide"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 w-[95%] max-w-2xl">
+        <div class="glass-panel rounded-2xl shadow-2xl p-2 flex justify-around items-center border border-white/50">
+            <a href="home.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 text-gray-500 hover:bg-rose-100 hover:text-rose-500">
+                <i data-lucide="heart"></i>
+                <span class="text-xs md:text-sm font-medium mt-1">Home</span>
+            </a>
+            <a href="letter.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 text-gray-500 hover:bg-rose-100 hover:text-rose-500">
+                <i data-lucide="file-text"></i>
+                <span class="text-xs md:text-sm font-medium mt-1">Letter</span>
+            </a>
+            <a href="music.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 text-gray-500 hover:bg-rose-100 hover:text-rose-500">
+                <i data-lucide="music"></i>
+                <span class="text-xs md:text-sm font-medium mt-1">Music</span>
+            </a>
+            <a href="photos.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 bg-rose-500 text-white shadow-lg scale-105">
+                <i data-lucide="image" class="animate-bounce"></i>
+                <span class="text-xs md:text-sm font-medium mt-1">Photos</span>
+            </a>
+            <a href="garden.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 text-gray-500 hover:bg-rose-100 hover:text-rose-500">
+                <i data-lucide="flower-2"></i>
+                <span class="text-xs md:text-sm font-medium mt-1">Garden</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // ✅ changed landingpage.html -> index.html (based on your folder screenshot)
+        if(localStorage.getItem('venus_auth') !== 'true') window.location.href = 'index.html';
+        lucide.createIcons();
+
+        // Hearts
+        const heartsContainer = document.getElementById('hearts-container');
+        for(let i=0; i<30; i++) {
+            const heart = document.createElement('div');
+            heart.className = 'heart-particle absolute text-pink-300 opacity-60';
+            heart.innerText = '❤';
+            heart.style.left = Math.random() * 100 + '%';
+            heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+            heart.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            heart.style.animationDelay = (Math.random() * 5) + 's';
+            heartsContainer.appendChild(heart);
+        }
+
+        // ============================
+        // ✅ YOUR IMAGES ARE IN THE SAME FOLDER AS photos.html
+        // Put EXACT file names here (copy from your VS Code left panel)
+        // Example: "475923439_668365318848952_4780421772800489654_n.jpg"
+        // ============================
+        const photoFiles = [
+            "475923439_668365318848952_4780421772800489654_n.jpg",
+            "473092140_621013653673190_5376845748223674071_n.jpg",
+            "476241426_586999564235366_2777276031636853536_n.jpg",
+            "490064962_1367391611170707_6298098680162847152_n.jpg",
+            "475802819_471856209320957_6883748710027434731_n.jpg",
+            "475736815_2093318834453731_1985269401002160810_n.jpg",
+            "c5bea128-e396-4eb5-b2df-61c0908ffd7a.jpg",
+            "91ee1684-7588-4e51-ad89-90afb5f95829.jpg",
+
+            // ✅ ADDED (DESCENDING ORDER)
+            "594511779_1518081416094360_5779589819958392565_n.jpg",
+            "594452243_2016260669135197_3027349046665343225_n.jpg",
+            "594442285_1214362004086740_2710181662855071008_n.jpg",
+            "594421511_2287287338440117_1230940626162843638_n.jpg",
+            "593461080_895272556516528_2006020900519335314_n.jpg",
+            "592872408_1906838476930419_3316739429245854275_n.jpg",
+            "592127564_1945784343041353_1506381018032816007_n.jpg",
+            "568706694_1730987274133657_7875747171590751968_n.jpg",
+            "568299778_824836810095485_5620562280417632079_n.jpg",
+            "566647800_1394096638800573_8049709760939980254_n.jpg",
+            "566511005_828616846526182_8120801771522052469_n.jpg",
+            "566228885_823928746693083_411431768054355905_n.jpg",
+            "556902239_1112555157340314_2722163421159490401_n.jpg",
+            "553988042_803050372623184_7220063074456615645_n.jpg",
+            "553317132_1130103142041693_3472116614266950789_n.jpg",
+            "553006169_1862319624711962_7357484641908650476_n.jpg",
+            "552698117_24637371149291213_8742268909457853834_n.jpg",
+            "552313513_1549318316054236_7021255952953107485_n.jpg",
+            "521584482_1288877086046124_4927742200849588777_n.jpg",
+            "521160094_1118264726859434_5933088809355549217_n.jpg",
+            "509422249_2815689668819726_6042618921105182211_n.jpg",
+            "508772510_1977896922614230_1109792504537314854_n.jpg",
+            "503943083_714546364658999_3743332730032182410_n.jpg",
+            "495264504_1057835656290988_1530965239593968425_n.jpg",
+            "495047221_688276310665585_2038876796514175653_n.jpg",
+            "494863710_987761863124837_2308341817266696606_n.jpg",
+            "494862007_1045702944096324_1150646726430438371_n.jpg",
+            "494859858_2415218228865049_1644431393795000054_n (1).jpg",
+            "494820828_1728329011899097_3089853769180548797_n.jpg",
+            "486818379_1011198937640227_3877196409265712130_n.jpg",
+            "486755080_9680319878655082_4272836193827556331_n (1).jpg",
+            "485856874_638039375687500_9049021417729417729_n.jpg",
+            "482427470_665207432632890_6121333480829947988_n.jpg",
+            "476348428_1368732020811388_7241913250375495541_n.jpg",
+            "476308893_1694251884836494_2032137310299218769_n.jpg",
+            "476053229_2029986780817955_8748687036685914642_n.jpg",
+            "491005817_1049832810323742_8572720306101929235_n.jpg",
+            "462555844_581365088141786_6931526350879744522_n (1).jpg",
+            "462548675_560842603458141_702738985659582525_n.jpg"
+        ];
+
+        const galleryGrid = document.getElementById('gallery-grid');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxCaption = document.getElementById('lightbox-caption');
+
+        let loadedCount = 0;
+
+        function makeCard(url, caption) {
+            const card = document.createElement('div');
+            card.className = "relative group rounded-xl overflow-hidden shadow-md cursor-pointer aspect-[3/4] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1";
+
+            // encodeURI helps if your file name has spaces
+            const safeUrl = encodeURI(url);
+
+            card.innerHTML = `
+                <img src="${safeUrl}" alt="${caption}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                  <p class="text-white font-medium text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                    ${caption}
+                  </p>
+                  <div class="absolute top-2 right-2 text-white opacity-0 group-hover:opacity-100 transition-opacity delay-100">
+                    <i data-lucide="zoom-in" width="20"></i>
+                  </div>
+                </div>
+            `;
+
+            const img = card.querySelector('img');
+
+            img.addEventListener('load', () => {
+                loadedCount++;
+                lucide.createIcons();
+            });
+
+            img.addEventListener('error', () => {
+                // if file name is wrong, remove the card so no broken icon
+                card.remove();
+            });
+
+            card.addEventListener('click', () => {
+                lightboxImg.src = safeUrl;
+                lightboxCaption.innerText = caption;
+                lightbox.classList.remove('hidden');
+                void lightbox.offsetWidth;
+                lightbox.classList.remove('opacity-0');
+            });
+
+            return card;
+        }
+
+        // Build gallery
+        photoFiles.forEach((file, i) => {
+            const caption = `Memory #${i + 1} - A special moment with you`;
+            // ✅ file is in same folder, so just use the file name directly
+            const card = makeCard(file, caption);
+            galleryGrid.appendChild(card);
+        });
+
+        // If none loaded, show message
+        setTimeout(() => {
+            if (loadedCount === 0) {
+                galleryGrid.innerHTML = `
+                  <div class="col-span-full text-center text-gray-500 font-medium py-10">
+                    No photos loaded.<br/>
+                    Make sure <b>photoFiles</b> contains the exact file names (with extension) and the images are beside <b>photos.html</b>.
+                  </div>
+                `;
+            }
+        }, 1200);
+
+        // Lightbox Logic
+        function closeLightbox() {
+            lightbox.classList.add('opacity-0');
+            setTimeout(() => {
+                lightbox.classList.add('hidden');
+                lightboxImg.src = '';
+            }, 300);
+        }
+
+        document.getElementById('close-lightbox').addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeLightbox();
+        });
+
+        lightbox.addEventListener('click', (e) => {
+            if(e.target === lightbox) closeLightbox();
+        });
+    </script>
+
+    <!-- Background music resume script -->
+    <script>
+      // Resume background music across pages using saved state from music.html
+      (function() {
+        const raw = localStorage.getItem('venus_player_state');
+        if (!raw) return;
+
+        let state;
+        try { state = JSON.parse(raw); } catch (e) { return; }
+        if (!state || !state.src) return;
+
+        const bgAudio = new Audio();
+        bgAudio.preload = 'metadata';
+        bgAudio.src = state.src;
+        bgAudio.currentTime = state.currentTime || 0;
+
+        if (state.isPlaying) {
+          bgAudio.play().catch(() => {
+            // Autoplay may be blocked until user interacts
+          });
+        }
+
+        function save() {
+          const newState = {
+            src: state.src,
+            index: state.index,
+            currentTime: bgAudio.currentTime || 0,
+            isPlaying: !bgAudio.paused
+          };
+          localStorage.setItem('venus_player_state', JSON.stringify(newState));
+        }
+
+        bgAudio.addEventListener('timeupdate', save);
+        window.addEventListener('beforeunload', save);
+      })();
+    </script>
+</body>
+</html>
