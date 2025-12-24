@@ -3,212 +3,728 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ILOVEYOU VENUS - Garden</title>
+    <title>Gesture Particles 3D</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Import Map for Modules -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://esm.sh/three@0.160.0",
+            "three/addons/": "https://esm.sh/three@0.160.0/examples/jsm/",
+            "@mediapipe/tasks-vision": "https://esm.sh/@mediapipe/tasks-vision@0.10.9"
+        }
+    }
+    </script>
+
     <style>
-        body { font-family: 'Quicksand', sans-serif; background-color: #fdf2f8; overflow-x: hidden; }
-        .font-handwriting { font-family: 'Dancing Script', cursive; }
-        .font-serif-display { font-family: 'Playfair Display', serif; }
-        @keyframes fall {
-            0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(110vh) translateX(20px) rotate(360deg); opacity: 0; }
+        /* Reset and Base */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050505;
         }
-        .heart-particle { position: fixed; top: -10%; pointer-events: none; animation-name: fall; animation-timing-function: linear; animation-iteration-count: infinite; }
-        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); }
-        
-        @keyframes sway {
-            0%, 100% { transform: rotate(-5deg); }
-            50% { transform: rotate(5deg); }
+
+        canvas {
+            touch-action: none;
+            display: block;
         }
-        .flower-sway { animation: sway 3s ease-in-out infinite; transform-origin: bottom; }
+
+        /* Utilities */
+        .scale-x-\[-1\] {
+            transform: scaleX(-1);
+        }
+
+        /* Custom Scrollbar for horizontal shape list on mobile */
+        #shape-controls::-webkit-scrollbar {
+            height: 4px;
+        }
+        #shape-controls::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        #shape-controls::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        /* Animation utilities */
+        @keyframes pulse-green {
+            0%, 100% { background-color: rgb(34, 197, 94); opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .animate-pulse-green {
+            animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .shape-btn-active {
+            background-color: rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        .shape-btn-active .icon {
+            color: white;
+        }
+
+        .shape-btn-active .label {
+            color: white;
+        }
+
+        .shape-btn-active .ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 0.75rem; /* rounded-xl */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .color-btn-active {
+            border-color: white !important;
+            transform: scale(1.1);
+        }
     </style>
 </head>
-<body class="bg-pink-50 text-gray-900 pb-24 md:pb-0">
+<body class="bg-neutral-950 text-white font-sans selection:bg-purple-500/30 overflow-hidden relative w-full h-screen m-0 p-0">
 
-    <div id="hearts-container" class="fixed inset-0 pointer-events-none z-0"></div>
-    <div class="hidden md:block absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-rose-300 via-pink-500 to-rose-300"></div>
+    <!-- 3D Canvas Container -->
+    <div id="canvas-container" class="absolute inset-0 z-0"></div>
 
-    <main class="relative z-10 pt-8 md:pt-12 min-h-screen">
-        <div class="animate-[fadeIn_0.5s_ease]">
-            <div id="garden-container" class="w-full h-[600px] relative overflow-hidden glass-panel rounded-3xl shadow-xl mt-8 mx-auto max-w-5xl border-b-8 border-rose-900 bg-gradient-to-b from-sky-100 to-green-100">
-                <h2 class="absolute top-4 left-0 right-0 text-center text-2xl font-serif-display text-rose-800 z-10 pointer-events-none">
-                    Our Growing Garden
-                </h2>
-                
-                <!-- Sky / Sun -->
-                <div class="absolute top-[-50px] right-[-50px] w-40 h-40 bg-yellow-200 rounded-full blur-xl opacity-60"></div>
-    
-                <!-- Ground -->
-                <div class="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-green-300 to-green-100 skew-y-2 origin-bottom-left scale-110"></div>
-    
-                <!-- Flowers Container -->
-                <div id="flowers-area" class="absolute inset-0 pointer-events-none"></div>
-    
-                <button id="plant-btn" class="absolute bottom-6 right-6 z-20 bg-rose-500 hover:bg-rose-600 text-white px-6 py-2 rounded-full shadow-lg font-bold transition-transform active:scale-95 flex items-center gap-2 cursor-pointer">
-                    <span>Plant a Flower</span> 🌸
-                </button>
-            </div>
+    <!-- Video Feed (Hidden/Small) -->
+    <div class="absolute bottom-4 left-4 z-50 rounded-xl overflow-hidden shadow-2xl border border-white/20">
+        <video id="webcam" autoplay playsinline muted class="w-32 h-24 object-cover opacity-80 scale-x-[-1]"></video>
+        <div id="loading-indicator" class="absolute inset-0 flex items-center justify-center bg-black/80 text-white text-xs">
+            Loading AI...
         </div>
-    </main>
-
-    <!-- Navigation -->
-    <div class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 w-[95%] max-w-2xl">
-        <div class="glass-panel rounded-2xl shadow-2xl p-2 flex justify-around items-center border border-white/50">
-            <a href="home.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 text-gray-500 hover:bg-rose-100 hover:text-rose-500">
-                <i data-lucide="heart"></i>
-                <span class="text-xs md:text-sm font-medium mt-1">Home</span>
-            </a>
-            <a href="letter.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 text-gray-500 hover:bg-rose-100 hover:text-rose-500">
-                <i data-lucide="file-text"></i>
-                <span class="text-xs md:text-sm font-medium mt-1">Letter</span>
-            </a>
-            <a href="music.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 text-gray-500 hover:bg-rose-100 hover:text-rose-500">
-                <i data-lucide="music"></i>
-                <span class="text-xs md:text-sm font-medium mt-1">Music</span>
-            </a>
-            <a href="photos.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 text-gray-500 hover:bg-rose-100 hover:text-rose-500">
-                <i data-lucide="image"></i>
-                <span class="text-xs md:text-sm font-medium mt-1">Photos</span>
-            </a>
-            <a href="garden.html" class="flex flex-col items-center justify-center p-2 md:p-4 rounded-xl transition-all duration-300 bg-rose-500 text-white shadow-lg scale-105">
-                <i data-lucide="flower-2" class="animate-bounce"></i>
-                <span class="text-xs md:text-sm font-medium mt-1">Garden</span>
-            </a>
+        <div class="absolute top-1 left-2 text-[10px] text-white/50 font-mono">
+            VISION DEBUG
         </div>
     </div>
 
-    <script>
-        if(localStorage.getItem('venus_auth') !== 'true') window.location.href = 'landingpage.html';
-        lucide.createIcons();
+    <!-- UI Overlay -->
+    <div class="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-6 sm:p-12">
         
-        // Hearts
-        const heartsContainer = document.getElementById('hearts-container');
-        for(let i=0; i<30; i++) {
-            const heart = document.createElement('div');
-            heart.className = 'heart-particle absolute text-pink-300 opacity-60';
-            heart.innerText = '❤';
-            heart.style.left = Math.random() * 100 + '%';
-            heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
-            heart.style.animationDuration = (Math.random() * 5 + 5) + 's';
-            heart.style.animationDelay = (Math.random() * 5) + 's';
-            heartsContainer.appendChild(heart);
-        }
+        <!-- Header & Nav -->
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="pointer-events-auto">
+                <!-- Navigation -->
+                <nav class="flex gap-4 text-xs text-white/60 mb-4 font-medium">
+                    
+                </nav>
 
-        // Garden Logic
-        const flowersArea = document.getElementById('flowers-area');
-        const colors = ['#FDA4AF', '#F472B6', '#FB7185', '#E11D48', '#FFB7C5'];
-
-        function getFlowerSVG(type, color) {
-            if(type === 1) {
-                return `
-                <svg viewBox="0 0 100 100" class="w-full h-full overflow-visible">
-                    <path d="M50 50 Q 50 20 65 35 Q 80 50 50 50 Z" fill="${color}" />
-                    <path d="M50 50 Q 80 50 65 65 Q 50 80 50 50 Z" fill="${color}" />
-                    <path d="M50 50 Q 50 80 35 65 Q 20 50 50 50 Z" fill="${color}" />
-                    <path d="M50 50 Q 20 50 35 35 Q 50 20 50 50 Z" fill="${color}" />
-                    <circle cx="50" cy="50" r="10" fill="#FFE5A0" />
-                </svg>`;
-            } else {
-                return `
-                <svg viewBox="0 0 100 100" class="w-full h-full overflow-visible">
-                    <circle cx="50" cy="35" r="15" fill="${color}" />
-                    <circle cx="65" cy="50" r="15" fill="${color}" />
-                    <circle cx="50" cy="65" r="15" fill="${color}" />
-                    <circle cx="35" cy="50" r="15" fill="${color}" />
-                    <circle cx="50" cy="50" r="12" fill="#FFD700" />
-                </svg>`;
-            }
-        }
-
-        function createFlower(isNew = false) {
-            const id = Date.now() + Math.random();
-            const x = Math.random() * 90 + 5;
-            const y = Math.random() * 80 + 10;
-            const type = Math.random() > 0.5 ? 1 : 2;
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            const scale = Math.random() * 0.5 + 0.5;
-
-            const div = document.createElement('div');
-            div.className = "absolute transition-transform duration-1000 ease-out origin-bottom";
-            div.style.left = x + '%';
-            div.style.bottom = y + '%';
-            div.style.width = '80px';
-            div.style.height = '80px';
-            div.style.zIndex = Math.floor(100 - y);
-            div.style.transform = isNew ? 'scale(0)' : `scale(${scale})`;
-
-            div.innerHTML = `
-                <!-- Stem -->
-                <div class="absolute bottom-1/2 left-1/2 w-1 h-[200px] bg-green-500 origin-top transform -translate-x-1/2 rotate-180 z-[-1]"></div>
-                <!-- Leaves -->
-                <div class="absolute bottom-[-20px] left-1/2 w-6 h-6 bg-green-500 rounded-tr-full rounded-bl-full transform -rotate-45"></div>
-                <!-- Bloom -->
-                <div class="flower-sway origin-bottom">
-                    ${getFlowerSVG(type, color)}
-                </div>
-            `;
+                <h1 class="text-3xl font-bold tracking-tighter bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent">
+                    Particle<span class="text-white">Flow</span>
+                </h1>
+                <p class="text-white/50 text-sm mt-2 max-w-xs">
+                    Wave your hand to control space.
+                    <br />
+                    <span class="text-xs text-white/30">
+                        Pinch: Scale • Move: Rotate • Distance: Explode
+                    </span>
+                </p>
+            </div>
             
-            flowersArea.appendChild(div);
+            <div class="pointer-events-auto">
+                <!-- Status Indicator -->
+                <div class="flex items-center space-x-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                    <i data-lucide="hand" class="w-4 h-4 text-white/70"></i>
+                    <span id="gesture-status-text" class="text-xs font-medium text-white/70">
+                        Initializing...
+                    </span>
+                    <div id="gesture-indicator" class="w-2 h-2 rounded-full bg-red-500 transition-colors duration-300"></div>
+                </div>
+            </div>
+        </header>
 
-            if(isNew) {
-                // Animate Bloom
-                setTimeout(() => {
-                    div.style.transform = `scale(${scale})`;
-                }, 50);
+        <!-- Bottom Controls -->
+        <div class="flex flex-col gap-6 pointer-events-auto items-center sm:items-start">
+            
+            <!-- Shape Selectors -->
+            <div id="shape-controls" class="flex gap-4 p-2 bg-black/20 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-x-auto max-w-full">
+                <!-- Buttons injected by JS -->
+            </div>
+
+            <!-- Color Selectors -->
+            <div class="flex items-center gap-3 p-3 bg-black/20 backdrop-blur-xl rounded-full border border-white/10 shadow-2xl">
+                <i data-lucide="palette" class="w-4 h-4 text-white/50 ml-2"></i>
+                <div class="w-px h-6 bg-white/10 mx-1"></div>
+                
+                <div id="color-controls" class="flex items-center gap-3">
+                    <!-- Color buttons injected by JS -->
+                </div>
+                
+                <!-- Custom Color Input -->
+                <div class="relative">
+                    <button id="custom-color-btn" class="w-8 h-8 rounded-full border-2 border-transparent flex items-center justify-center bg-gradient-to-tr from-blue-400 to-red-400 transition-transform hover:scale-110">
+                        <span class="text-[10px] font-bold text-white shadow-sm">+</span>
+                    </button>
+                    
+                    <div id="color-picker-popover" class="hidden absolute bottom-12 left-0 p-2 bg-neutral-900 rounded-lg shadow-xl border border-white/10">
+                        <input type="color" id="color-input" class="w-8 h-8 cursor-pointer rounded bg-transparent border-none" value="#ff0066">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Logic -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
+
+        /**
+         * CONFIGURATION & CONSTANTS
+         */
+        const PARTICLE_COUNT = 4000;
+
+        const ShapeType = {
+            SPHERE: 'Sphere',
+            HEART: 'Heart',
+            SATURN: 'Saturn',
+            FLOWER: 'Flower',
+            VENUS: 'Venus',
+            LOVE: 'Love'
+        };
+
+        const SHAPES_CONFIG = [
+            { type: ShapeType.HEART, icon: 'heart', label: 'Heart' },
+            { type: ShapeType.SPHERE, icon: 'globe', label: 'Sphere' },
+            { type: ShapeType.SATURN, icon: 'circle-dot', label: 'Saturn' },
+            { type: ShapeType.FLOWER, icon: 'aperture', label: 'Flower' },
+            { type: ShapeType.VENUS, icon: 'type', label: 'Venus' },
+            { type: ShapeType.LOVE, icon: 'sparkles', label: 'Love' },
+        ];
+
+        const PRESET_COLORS = [
+            '#ff0066', // Hot Pink
+            '#00ffea', // Cyan
+            '#ffaa00', // Amber
+            '#aa00ff', // Violet
+            '#00ff66', // Lime
+            '#ffffff'  // White
+        ];
+
+        // App State
+        const state = {
+            currentShape: ShapeType.HEART,
+            currentColor: '#ff0066',
+            controls: {
+                x: 0,
+                y: 0,
+                spread: 0,
+                scale: 1,
+                detected: false
+            }
+        };
+
+        // Physics/Smooth State
+        const smoothState = {
+            rotationX: 0,
+            rotationY: 0,
+            scale: 1,
+            spread: 0
+        };
+
+        /**
+         * THREE.JS SETUP
+         */
+        const canvasContainer = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+
+        // Camera
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 0, 8);
+
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        canvasContainer.appendChild(renderer.domElement);
+
+        // Lighting (Ambient)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        // Handle Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        /**
+         * PARTICLE SYSTEM
+         */
+        let points;
+        let geometry;
+        let material;
+        let targetPositions;
+        let targetColors;
+        let currentPositionsArr;
+        let randomOffsets;
+
+        function initParticles() {
+            geometry = new THREE.BufferGeometry();
+            currentPositionsArr = new Float32Array(PARTICLE_COUNT * 3);
+            targetPositions = new Float32Array(PARTICLE_COUNT * 3);
+            targetColors = new Float32Array(PARTICLE_COUNT * 3);
+            randomOffsets = generateRandomOffsets();
+
+            // Initial Data
+            const shapeData = generateShapePositions(state.currentShape);
+            targetPositions.set(shapeData.positions);
+            currentPositionsArr.set(targetPositions);
+            
+            const colors = generateShapeColors(state.currentShape, state.currentColor);
+            targetColors.set(colors);
+
+            // Attributes
+            geometry.setAttribute('position', new THREE.BufferAttribute(currentPositionsArr, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(targetColors, 3));
+
+            // Material
+            material = new THREE.PointsMaterial({
+                size: 0.06,
+                vertexColors: true,
+                sizeAttenuation: true,
+                transparent: true,
+                opacity: 0.85,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+
+            points = new THREE.Points(geometry, material);
+            scene.add(points);
+        }
+
+        function updateParticles(delta) {
+            if (!points || !geometry) return;
+
+            const lerpSpeed = 3 * delta;
+
+            // 1. Update Physics / Transitions based on Hand Controls
+            if (state.controls.detected) {
+                smoothState.spread = THREE.MathUtils.lerp(smoothState.spread, state.controls.spread, lerpSpeed);
+                smoothState.scale = THREE.MathUtils.lerp(smoothState.scale, state.controls.scale, lerpSpeed);
+                smoothState.rotationY += state.controls.x * delta * 2;
+                smoothState.rotationX += state.controls.y * delta * 2;
+            } else {
+                smoothState.rotationY += 0.2 * delta;
+                smoothState.spread = THREE.MathUtils.lerp(smoothState.spread, 0, lerpSpeed);
+                smoothState.scale = THREE.MathUtils.lerp(smoothState.scale, 1, lerpSpeed);
+            }
+
+            // 2. Update Particles Positions
+            const positions = geometry.attributes.position.array;
+            
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const i3 = i * 3;
+                
+                const tx = targetPositions[i3];
+                const ty = targetPositions[i3 + 1];
+                const tz = targetPositions[i3 + 2];
+                
+                // Explosion/Spread Logic
+                const spreadFactor = smoothState.spread;
+                const effectiveSpread = spreadFactor * spreadFactor;
+                
+                const ox = randomOffsets[i3] * effectiveSpread * 2;
+                const oy = randomOffsets[i3 + 1] * effectiveSpread * 2;
+                const oz = randomOffsets[i3 + 2] * effectiveSpread * 2;
+                
+                const targetX = tx + ox;
+                const targetY = ty + oy;
+                const targetZ = tz + oz;
+
+                // Lerp
+                positions[i3] += (targetX - positions[i3]) * 0.1;
+                positions[i3 + 1] += (targetY - positions[i3 + 1]) * 0.1;
+                positions[i3 + 2] += (targetZ - positions[i3 + 2]) * 0.1;
+            }
+            
+            geometry.attributes.position.needsUpdate = true;
+
+            // 3. Update Colors
+            const colors = geometry.attributes.color.array;
+            for (let i = 0; i < PARTICLE_COUNT * 3; i++) {
+                colors[i] += (targetColors[i] - colors[i]) * 0.05;
+            }
+            geometry.attributes.color.needsUpdate = true;
+
+            // 4. Apply Group Transforms
+            points.rotation.x = smoothState.rotationX;
+            points.rotation.y = smoothState.rotationY;
+            
+            const s = smoothState.scale;
+            points.scale.set(s, s, s);
+        }
+
+        /**
+         * SHAPE UTILITIES
+         */
+        function generateRandomOffsets() {
+            const offsets = new Float32Array(PARTICLE_COUNT * 3);
+            for (let i = 0; i < PARTICLE_COUNT * 3; i++) {
+                offsets[i] = (Math.random() - 0.5) * 10;
+            }
+            return offsets;
+        }
+
+        function getTextPositions(text, count) {
+            const positions = new Float32Array(count * 3);
+            const width = 1200;
+            const height = 300;
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+
+            if (!ctx) return positions;
+
+            ctx.fillStyle = 'white';
+            ctx.font = '900 140px Inter, sans-serif, system-ui';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, width / 2, height / 2);
+
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const data = imageData.data;
+            const validPixels = [];
+
+            for (let i = 0; i < width * height; i++) {
+                if (data[i * 4 + 3] > 128) {
+                    validPixels.push(i);
+                }
+            }
+
+            if (validPixels.length === 0) return positions;
+
+            for (let i = 0; i < count; i++) {
+                const pixelIndex = validPixels[Math.floor(Math.random() * validPixels.length)];
+                const px = pixelIndex % width;
+                const py = Math.floor(pixelIndex / width);
+                const x = (px - width / 2) * 0.012;
+                const y = -(py - height / 2) * 0.012;
+                const z = (Math.random() - 0.5) * 0.8;
+
+                positions[i * 3] = x;
+                positions[i * 3 + 1] = y;
+                positions[i * 3 + 2] = z;
+            }
+            return positions;
+        }
+
+        function generateShapePositions(type) {
+            const positions = new Float32Array(PARTICLE_COUNT * 3);
+            
+            if (type === ShapeType.VENUS) {
+                return { positions: getTextPositions("VENUS", PARTICLE_COUNT) };
+            }
+            if (type === ShapeType.LOVE) {
+                return { positions: getTextPositions("I LOVE YOU", PARTICLE_COUNT) };
+            }
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const i3 = i * 3;
+                let x = 0, y = 0, z = 0;
+
+                switch (type) {
+                    case ShapeType.SPHERE: {
+                        const theta = Math.random() * Math.PI * 2;
+                        const phi = Math.acos((Math.random() * 2) - 1);
+                        const r = 2.5;
+                        x = r * Math.sin(phi) * Math.cos(theta);
+                        y = r * Math.sin(phi) * Math.sin(theta);
+                        z = r * Math.cos(phi);
+                        break;
+                    }
+                    case ShapeType.HEART: {
+                        const t = Math.random() * Math.PI * 2;
+                        const scale = 0.15;
+                        const xBase = 16 * Math.pow(Math.sin(t), 3);
+                        const yBase = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+                        const zThickness = (Math.random() - 0.5) * 2;
+                        x = xBase * scale;
+                        y = yBase * scale;
+                        z = zThickness;
+                        const vol = Math.random() * 0.2;
+                        x += (Math.random() - 0.5) * vol;
+                        y += (Math.random() - 0.5) * vol;
+                        break;
+                    }
+                    case ShapeType.SATURN: {
+                        const isRing = Math.random() > 0.4; 
+                        if (isRing) {
+                            const angle = Math.random() * Math.PI * 2;
+                            const minR = 3.5;
+                            const maxR = 5.5;
+                            const r = minR + Math.random() * (maxR - minR);
+                            x = r * Math.cos(angle);
+                            z = r * Math.sin(angle);
+                            y = (Math.random() - 0.5) * 0.2; 
+                        } else {
+                            const theta = Math.random() * Math.PI * 2;
+                            const phi = Math.acos((Math.random() * 2) - 1);
+                            const r = 1.8;
+                            x = r * Math.sin(phi) * Math.cos(theta);
+                            y = r * Math.sin(phi) * Math.sin(theta);
+                            z = r * Math.cos(phi);
+                        }
+                        const tilt = Math.PI / 6;
+                        const ty = y * Math.cos(tilt) - z * Math.sin(tilt);
+                        const tz = y * Math.sin(tilt) + z * Math.cos(tilt);
+                        y = ty;
+                        z = tz;
+                        break;
+                    }
+                    case ShapeType.FLOWER: {
+                        const k = 4;
+                        const theta = Math.random() * Math.PI * 2;
+                        const phi = (Math.random() - 0.5) * Math.PI; 
+                        const rBase = Math.cos(k * theta) + 2;
+                        const r = rBase * 1.0;
+                        x = r * Math.cos(theta) * Math.cos(phi);
+                        y = r * Math.sin(phi) * 0.5; 
+                        z = r * Math.sin(theta) * Math.cos(phi);
+                        break;
+                    }
+                }
+                positions[i3] = x;
+                positions[i3 + 1] = y;
+                positions[i3 + 2] = z;
+            }
+            return { positions };
+        }
+
+        function generateShapeColors(type, baseColorHex) {
+            const colors = new Float32Array(PARTICLE_COUNT * 3);
+            const baseColor = new THREE.Color(baseColorHex);
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const i3 = i * 3;
+                let c;
+
+                if (type === ShapeType.LOVE) {
+                    const r = Math.random();
+                    if (r < 0.3) c = new THREE.Color(0xFF0044);
+                    else if (r < 0.6) c = new THREE.Color(0xFF69B4);
+                    else if (r < 0.8) c = new THREE.Color(0x9400D3);
+                    else if (r < 0.95) c = new THREE.Color(0xFF1493);
+                    else c = new THREE.Color(0xFFFFFF);
+                } else {
+                    c = new THREE.Color(baseColorHex);
+                }
+
+                colors[i3] = c.r;
+                colors[i3 + 1] = c.g;
+                colors[i3 + 2] = c.b;
+            }
+            return colors;
+        }
+
+        /**
+         * HAND TRACKING
+         */
+        let handLandmarker;
+        let videoElement;
+        let animationFrameId;
+
+        async function setupMediaPipe() {
+            try {
+                const vision = await FilesetResolver.forVisionTasks(
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.9/wasm"
+                );
+                handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+                        delegate: "GPU"
+                    },
+                    runningMode: "VIDEO",
+                    numHands: 1
+                });
+                startWebcam();
+            } catch (err) {
+                console.error("MediaPipe Error:", err);
+                document.getElementById('loading-indicator').innerText = "AI Error";
             }
         }
 
-        // Initial Garden
-        for(let i=0; i<15; i++) {
-            createFlower(false);
+        async function startWebcam() {
+            videoElement = document.getElementById('webcam');
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: 320, height: 240, facingMode: "user" }
+                    });
+                    videoElement.srcObject = stream;
+                    videoElement.addEventListener("loadeddata", () => {
+                        document.getElementById('loading-indicator').style.display = 'none';
+                        predictWebcam();
+                    });
+                } catch (err) {
+                    console.error("Webcam Error:", err);
+                    document.getElementById('loading-indicator').innerText = "Cam Denied";
+                }
+            }
         }
 
-        document.getElementById('plant-btn').addEventListener('click', () => {
-            createFlower(true);
-        });
-    </script>
+        function predictWebcam() {
+            if (!handLandmarker || !videoElement) return;
 
-    <!-- Background music resume script -->
-    <script>
-      // Resume background music across pages using saved state from music.html
-      (function() {
-        const raw = localStorage.getItem('venus_player_state');
-        if (!raw) return;
+            const nowInMs = Date.now();
+            const results = handLandmarker.detectForVideo(videoElement, nowInMs);
+            const indicator = document.getElementById('gesture-indicator');
+            const statusText = document.getElementById('gesture-status-text');
 
-        let state;
-        try {
-          state = JSON.parse(raw);
-        } catch (e) {
-          return;
+            if (results.landmarks && results.landmarks.length > 0) {
+                const landmarks = results.landmarks[0];
+                
+                // Update UI
+                state.controls.detected = true;
+                indicator.className = "w-2 h-2 rounded-full animate-pulse-green";
+                statusText.innerText = "Active";
+
+                // 1. Position
+                const wrist = landmarks[0];
+                const middleProximal = landmarks[9];
+                const cx = (wrist.x + middleProximal.x) / 2;
+                const cy = (wrist.y + middleProximal.y) / 2;
+                const handX = (1 - cx) * 2 - 1;
+                const handY = -(cy * 2 - 1);
+
+                // 2. Spread
+                const dx = wrist.x - middleProximal.x;
+                const dy = wrist.y - middleProximal.y;
+                const size = Math.sqrt(dx*dx + dy*dy);
+                const minSize = 0.05;
+                const maxSize = 0.25;
+                const normalizedSize = Math.max(0, Math.min(1, (size - minSize) / (maxSize - minSize)));
+                const spread = 1 - normalizedSize;
+
+                // 3. Scale/Pinch
+                const thumbTip = landmarks[4];
+                const indexTip = landmarks[8];
+                const pinchDist = Math.sqrt(Math.pow(thumbTip.x - indexTip.x, 2) + Math.pow(thumbTip.y - indexTip.y, 2));
+                const pinchRatio = pinchDist / size;
+                const minPinch = 0.2;
+                const maxPinch = 1.0;
+                const normPinch = Math.max(0, Math.min(1, (pinchRatio - minPinch) / (maxPinch - minPinch)));
+                const scale = 0.5 + normPinch * 1.5;
+
+                state.controls.x = handX;
+                state.controls.y = handY;
+                state.controls.spread = spread;
+                state.controls.scale = scale;
+            } else {
+                state.controls.detected = false;
+                indicator.className = "w-2 h-2 rounded-full bg-red-500 transition-colors";
+                statusText.innerText = "No Hand";
+            }
+
+            animationFrameId = requestAnimationFrame(predictWebcam);
         }
-        if (!state || !state.src) return;
 
-        const bgAudio = new Audio();
-        bgAudio.preload = 'metadata';
-        bgAudio.src = state.src;
-        bgAudio.currentTime = state.currentTime || 0;
+        /**
+         * UI & INTERACTION
+         */
+        function renderUI() {
+            // Render Shape Buttons
+            const shapeContainer = document.getElementById('shape-controls');
+            shapeContainer.innerHTML = '';
+            SHAPES_CONFIG.forEach(s => {
+                const btn = document.createElement('button');
+                const isActive = state.currentShape === s.type;
+                btn.className = `relative group flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-all duration-300 ${isActive ? 'shape-btn-active' : 'hover:bg-white/5'}`;
+                btn.onclick = () => setShape(s.type);
+                
+                btn.innerHTML = `
+                    <i data-lucide="${s.icon}" class="icon w-6 h-6 mb-1 transition-colors duration-300 ${isActive ? 'text-white' : 'text-white/50 group-hover:text-white'}"></i>
+                    <span class="label text-[10px] font-medium tracking-wide transition-colors ${isActive ? 'text-white' : 'text-white/40'}">${s.label}</span>
+                    ${isActive ? '<span class="ring"></span>' : ''}
+                `;
+                shapeContainer.appendChild(btn);
+            });
 
-        if (state.isPlaying) {
-          bgAudio.play().catch(() => {
-            // Autoplay may be blocked until user interacts
-          });
+            // Render Color Buttons
+            const colorContainer = document.getElementById('color-controls');
+            colorContainer.innerHTML = '';
+            PRESET_COLORS.forEach(c => {
+                const btn = document.createElement('button');
+                const isActive = state.currentColor === c;
+                btn.className = `w-8 h-8 rounded-full border-2 transition-transform duration-200 hover:scale-110 ${isActive ? 'color-btn-active' : 'border-transparent'}`;
+                btn.style.backgroundColor = c;
+                btn.onclick = () => setColor(c);
+                colorContainer.appendChild(btn);
+            });
+
+            // Refresh Icons
+            lucide.createIcons();
         }
 
-        function save() {
-          const newState = {
-            src: state.src,
-            index: state.index,
-            currentTime: bgAudio.currentTime || 0,
-            isPlaying: !bgAudio.paused
-          };
-          localStorage.setItem('venus_player_state', JSON.stringify(newState));
+        function setShape(newShape) {
+            state.currentShape = newShape;
+            renderUI();
+            const newData = generateShapePositions(newShape);
+            targetPositions.set(newData.positions);
+            // Also regenerate colors because LOVE/VENUS might use different logic
+            const newColors = generateShapeColors(newShape, state.currentColor);
+            targetColors.set(newColors);
         }
 
-        bgAudio.addEventListener('timeupdate', save);
-        window.addEventListener('beforeunload', save);
-      })();
+        function setColor(newColor) {
+            state.currentColor = newColor;
+            renderUI();
+            const newColors = generateShapeColors(state.currentShape, newColor);
+            targetColors.set(newColors);
+            document.getElementById('color-picker-popover').classList.add('hidden');
+        }
+
+        // Custom Color Picker
+        const colorBtn = document.getElementById('custom-color-btn');
+        const colorPopover = document.getElementById('color-picker-popover');
+        const colorInput = document.getElementById('color-input');
+
+        if (colorBtn) {
+            colorBtn.onclick = () => {
+                colorPopover.classList.toggle('hidden');
+            };
+        }
+
+        if (colorInput) {
+            colorInput.oninput = (e) => {
+                setColor(e.target.value);
+            };
+        }
+
+        /**
+         * MAIN LOOP
+         */
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            updateParticles(delta);
+            renderer.render(scene, camera);
+        }
+
+        // Initialization
+        function init() {
+            initParticles();
+            renderUI();
+            animate();
+            setupMediaPipe();
+            lucide.createIcons();
+        }
+
+        init();
     </script>
 </body>
 </html>
